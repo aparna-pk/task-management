@@ -1,5 +1,6 @@
 import logging
 import logging.config
+
 from app.core.config import settings
 
 
@@ -13,7 +14,7 @@ def setup_logging() -> None:
                 "datefmt": "%Y-%m-%d %H:%M:%S",
             },
             "detailed": {
-                "format": "[%(asctime)s] %(levelname)s [%(name)s:%(filename)s:%(lineno)d] - %(message)s",
+                "format": "[%(asctime)s] %(levelname)s [%(name)s:%(filename)s:%(lineno)d] - %(message)s",  # noqa: E501
                 "datefmt": "%Y-%m-%d %H:%M:%S",
             },
         },

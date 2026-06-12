@@ -44,7 +44,9 @@ async def test_register_duplicate_email(client: AsyncClient):
         },
     )
     assert response.status_code == 409
-    assert response.json()["message"] == "A user with this email address already exists."
+    assert (
+        response.json()["message"] == "A user with this email address already exists."
+    )
 
 
 @pytest.mark.asyncio
@@ -79,7 +81,9 @@ async def test_get_me_unauthorized(client: AsyncClient):
 
 
 @pytest.mark.asyncio
-async def test_get_me_success(client: AsyncClient, auth_headers: dict, normal_user: dict):
+async def test_get_me_success(
+    client: AsyncClient, auth_headers: dict, normal_user: dict
+):
     """Test fetching profile with a valid token returns user data."""
     response = await client.get(
         "/api/v1/auth/me",

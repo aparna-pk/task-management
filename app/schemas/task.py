@@ -1,14 +1,15 @@
 from datetime import datetime
-from typing import Optional
+
 from pydantic import BaseModel, ConfigDict, Field
+
 from app.models.task import TaskStatus
 
 
 class TaskBase(BaseModel):
     title: str = Field(..., min_length=1, max_length=255)
-    description: Optional[str] = Field(None, max_length=1024)
+    description: str | None = Field(None, max_length=1024)
     status: TaskStatus = TaskStatus.TODO
-    due_date: Optional[datetime] = None
+    due_date: datetime | None = None
 
 
 class TaskCreate(TaskBase):
@@ -16,10 +17,10 @@ class TaskCreate(TaskBase):
 
 
 class TaskUpdate(BaseModel):
-    title: Optional[str] = Field(None, min_length=1, max_length=255)
-    description: Optional[str] = Field(None, max_length=1024)
-    status: Optional[TaskStatus] = None
-    due_date: Optional[datetime] = None
+    title: str | None = Field(None, min_length=1, max_length=255)
+    description: str | None = Field(None, max_length=1024)
+    status: TaskStatus | None = None
+    due_date: datetime | None = None
 
 
 class TaskResponse(TaskBase):

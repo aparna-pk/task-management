@@ -1,6 +1,6 @@
-from typing import Optional
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
+
 from app.core.security import get_password_hash
 from app.models.user import User
 from app.repositories.base import BaseRepository
@@ -8,7 +8,7 @@ from app.schemas.user import UserCreate
 
 
 class UserRepository(BaseRepository[User]):
-    async def get_by_email(self, db: AsyncSession, email: str) -> Optional[User]:
+    async def get_by_email(self, db: AsyncSession, email: str) -> User | None:
         """Fetch a user by their email address."""
         result = await db.execute(select(self.model).filter(self.model.email == email))
         return result.scalars().first()

@@ -1,6 +1,6 @@
-from typing import List, Optional
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
+
 from app.models.task import Task
 from app.repositories.base import BaseRepository
 from app.schemas.task import TaskCreate
@@ -9,7 +9,7 @@ from app.schemas.task import TaskCreate
 class TaskRepository(BaseRepository[Task]):
     async def get_multi_by_owner(
         self, db: AsyncSession, *, owner_id: int, skip: int = 0, limit: int = 100
-    ) -> List[Task]:
+    ) -> list[Task]:
         """Fetch tasks belonging to a specific owner with pagination."""
         result = await db.execute(
             select(self.model)
@@ -21,10 +21,12 @@ class TaskRepository(BaseRepository[Task]):
 
     async def get_by_owner_and_id(
         self, db: AsyncSession, *, id: int, owner_id: int
-    ) -> Optional[Task]:
+    ) -> Task | None:
         """Fetch a single task belonging to a specific owner by ID."""
         result = await db.execute(
-            select(self.model).filter(self.model.id == id, self.model.owner_id == owner_id)
+            select(self.model).filter(
+                self.model.id == id, self.model.owner_id == owner_id
+            )
         )
         return result.scalars().first()
 

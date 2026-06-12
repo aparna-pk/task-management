@@ -1,6 +1,8 @@
-from typing import Any, Dict, Generic, List, Optional, Type, TypeVar, Union
+from typing import Any, Generic, TypeVar
+
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
+
 from app.core.database import Base
 
 ModelType = TypeVar("ModelType", bound=Base)
@@ -9,22 +11,22 @@ ModelType = TypeVar("ModelType", bound=Base)
 class BaseRepository(Generic[ModelType]):
     """Generic repository containing base CRUD database operations."""
 
-    def __init__(self, model: Type[ModelType]):
+    def __init__(self, model: type[ModelType]):
         self.model = model
 
-    async def get(self, db: AsyncSession, id: Any) -> Optional[ModelType]:
+    async def get(self, db: AsyncSession, id: Any) -> ModelType | None:
         """Fetch a single record by primary key."""
-        result = await db.execute(select(self.model).filter(self.model.id == id))
+        result = await db.execute(select(self.model).filter(self.model.id == id))  # type: ignore[attr-defined]
         return result.scalars().first()
 
     async def get_multi(
         self, db: AsyncSession, *, skip: int = 0, limit: int = 100
-    ) -> List[ModelType]:
+    ) -> list[ModelType]:
         """Fetch multiple records with pagination."""
         result = await db.execute(select(self.model).offset(skip).limit(limit))
         return list(result.scalars().all())
 
-    async def create(self, db: AsyncSession, *, obj_in: Union[dict, Any]) -> ModelType:
+    async def create(self, db: AsyncSession, *, obj_in: dict | Any) -> ModelType:
         """Create a new database record."""
         if isinstance(obj_in, dict):
             obj_data = obj_in
@@ -42,7 +44,7 @@ class BaseRepository(Generic[ModelType]):
         db: AsyncSession,
         *,
         db_obj: ModelType,
-        obj_in: Union[dict, Any],
+        obj_in: dict | Any,
     ) -> ModelType:
         """Update an existing database record."""
         if isinstance(obj_in, dict):
@@ -59,7 +61,7 @@ class BaseRepository(Generic[ModelType]):
         await db.refresh(db_obj)
         return db_obj
 
-    async def remove(self, db: AsyncSession, *, id: Any) -> Optional[ModelType]:
+    async def remove(self, db: AsyncSession, *, id: Any) -> ModelType | None:
         """Remove a database record by primary key."""
         db_obj = await self.get(db, id)
         if db_obj:

@@ -1,5 +1,6 @@
 import asyncio
-from typing import AsyncGenerator, Generator
+from collections.abc import AsyncGenerator, Generator
+
 import pytest
 import pytest_asyncio
 from httpx import ASGITransport, AsyncClient
@@ -130,4 +131,3 @@ async def other_user_token(client: AsyncClient, other_user: dict) -> str:
 async def other_auth_headers(other_user_token: str) -> dict:
     """Fixture to return auth headers for the second user."""
     return {"Authorization": f"Bearer {other_user_token}"}
-

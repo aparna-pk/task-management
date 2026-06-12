@@ -24,7 +24,9 @@ async def test_create_task(client: AsyncClient, auth_headers: dict):
 
 
 @pytest.mark.asyncio
-async def test_get_tasks(client: AsyncClient, auth_headers: dict, other_auth_headers: dict):
+async def test_get_tasks(
+    client: AsyncClient, auth_headers: dict, other_auth_headers: dict
+):
     """Test retrieving tasks owned by current user."""
     # Create task for User 1
     await client.post(
@@ -60,9 +62,7 @@ async def test_get_single_task(client: AsyncClient, auth_headers: dict):
     task_id = create_response.json()["id"]
 
     # Fetch details
-    response = await client.get(
-        f"/api/v1/tasks/{task_id}", headers=auth_headers
-    )
+    response = await client.get(f"/api/v1/tasks/{task_id}", headers=auth_headers)
     assert response.status_code == 200
     assert response.json()["title"] == "Single Task"
     assert response.json()["status"] == "in_progress"
@@ -82,11 +82,11 @@ async def test_get_another_user_task_returns_404(
     task_id = create_response.json()["id"]
 
     # Try to fetch as User 2 (other_user)
-    response = await client.get(
-        f"/api/v1/tasks/{task_id}", headers=other_auth_headers
-    )
+    response = await client.get(f"/api/v1/tasks/{task_id}", headers=other_auth_headers)
     assert response.status_code == 404
-    assert response.json()["message"] == "Task not found or you do not have access to it."
+    assert (
+        response.json()["message"] == "Task not found or you do not have access to it."
+    )
 
 
 @pytest.mark.asyncio
@@ -132,7 +132,9 @@ async def test_update_another_user_task_returns_404(
         headers=other_auth_headers,
     )
     assert response.status_code == 404
-    assert response.json()["message"] == "Task not found or you do not have access to it."
+    assert (
+        response.json()["message"] == "Task not found or you do not have access to it."
+    )
 
 
 @pytest.mark.asyncio
@@ -147,15 +149,11 @@ async def test_delete_task(client: AsyncClient, auth_headers: dict):
     task_id = create_response.json()["id"]
 
     # Delete
-    response = await client.delete(
-        f"/api/v1/tasks/{task_id}", headers=auth_headers
-    )
+    response = await client.delete(f"/api/v1/tasks/{task_id}", headers=auth_headers)
     assert response.status_code == 200
 
     # Ensure it's gone
-    check_response = await client.get(
-        f"/api/v1/tasks/{task_id}", headers=auth_headers
-    )
+    check_response = await client.get(f"/api/v1/tasks/{task_id}", headers=auth_headers)
     assert check_response.status_code == 404
 
 
@@ -177,4 +175,6 @@ async def test_delete_another_user_task_returns_404(
         f"/api/v1/tasks/{task_id}", headers=other_auth_headers
     )
     assert response.status_code == 404
-    assert response.json()["message"] == "Task not found or you do not have access to it."
+    assert (
+        response.json()["message"] == "Task not found or you do not have access to it."
+    )
