@@ -1,0 +1,33 @@
+# Virtual Environment
+venv/
+.venv/
+env/
+
+# Git metadata
+.git/
+.gitignore
+
+# IDE Configurations
+.idea/
+.vscode/
+
+# Python Cache & Compiled Files
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+.pytest_cache/
+.coverage
+htmlcov/
+
+# Local configuration secrets
+.env
+.env.example
+
+# Test Suite (should not be in production images)
+tests/
+
+# Docker configurations
+Dockerfile
+docker-compose.yml
+.dockerignore
