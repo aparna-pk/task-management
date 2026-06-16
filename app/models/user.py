@@ -8,6 +8,7 @@ from app.core.database import Base
 
 if TYPE_CHECKING:
     from app.models.task import Task
+    from app.models.team import TeamMember
 
 
 class User(Base):
@@ -30,5 +31,16 @@ class User(Base):
 
     # Relationships
     tasks: Mapped[list["Task"]] = relationship(
-        "Task", back_populates="owner", cascade="all, delete-orphan"
+        "Task",
+        back_populates="owner",
+        cascade="all, delete-orphan",
+        foreign_keys="Task.owner_id",
+    )
+    assigned_tasks: Mapped[list["Task"]] = relationship(
+        "Task",
+        back_populates="assignee",
+        foreign_keys="Task.assignee_id",
+    )
+    team_memberships: Mapped[list["TeamMember"]] = relationship(
+        "TeamMember", back_populates="user", cascade="all, delete-orphan"
     )
