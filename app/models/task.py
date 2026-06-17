@@ -17,6 +17,12 @@ class TaskStatus(str, enum.Enum):
     DONE = "done"
 
 
+class TaskPriority(str, enum.Enum):
+    LOW = "LOW"
+    MEDIUM = "MEDIUM"
+    HIGH = "HIGH"
+
+
 class Task(Base):
     __tablename__ = "tasks"
 
@@ -27,17 +33,32 @@ class Task(Base):
         Enum(TaskStatus, native_enum=False, length=50),
         default=TaskStatus.TODO,
         nullable=False,
+        index=True,
+    )
+    priority: Mapped[TaskPriority] = mapped_column(
+        Enum(TaskPriority, native_enum=False, length=50),
+        default=TaskPriority.MEDIUM,
+        nullable=False,
+        index=True,
     )
     due_date: Mapped[datetime | None] = mapped_column(
-        DateTime(timezone=True), nullable=True
+        DateTime(timezone=True), nullable=True, index=True
     )
 
     owner_id: Mapped[int] = mapped_column(
-        ForeignKey("users.id", ondelete="CASCADE"), nullable=False
+        ForeignKey("users.id", ondelete="CASCADE"), nullable=False, index=True
+    )
+    assignee_id: Mapped[int | None] = mapped_column(
+        ForeignKey("users.id", ondelete="SET NULL"), nullable=True, index=True
     )
 
     # Relationships
-    owner: Mapped["User"] = relationship("User", back_populates="tasks")
+    owner: Mapped["User"] = relationship(
+        "User", back_populates="tasks", foreign_keys=[owner_id]
+    )
+    assignee: Mapped["User | None"] = relationship(
+        "User", back_populates="assigned_tasks", foreign_keys=[assignee_id]
+    )
 
     created_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True), server_default=func.now()
