@@ -73,7 +73,7 @@ jobs:
           # The tests use an in-memory SQLite database, so no external DB service container is required.
           SECRET_KEY: "ci-dummy-secret-key-for-running-tests"
         run: |
-          pytest
+          python -m pytest
 
   docker-build:
     name: Build Docker Image
