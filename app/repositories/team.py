@@ -7,9 +7,7 @@ from app.repositories.base import BaseRepository
 
 
 class TeamRepository(BaseRepository[Team]):
-    async def get_with_members(
-        self, db: AsyncSession, *, team_id: int
-    ) -> Team | None:
+    async def get_with_members(self, db: AsyncSession, *, team_id: int) -> Team | None:
         """Fetch a team with its members eagerly loaded."""
         result = await db.execute(
             select(self.model)
@@ -18,14 +16,10 @@ class TeamRepository(BaseRepository[Team]):
         )
         return result.scalars().first()
 
-    async def get_teams_for_user(
-        self, db: AsyncSession, *, user_id: int
-    ) -> list[Team]:
+    async def get_teams_for_user(self, db: AsyncSession, *, user_id: int) -> list[Team]:
         """Fetch all teams a user belongs to."""
         result = await db.execute(
-            select(self.model)
-            .join(TeamMember)
-            .filter(TeamMember.user_id == user_id)
+            select(self.model).join(TeamMember).filter(TeamMember.user_id == user_id)
         )
         return list(result.scalars().all())
 
@@ -61,16 +55,12 @@ class TeamRepository(BaseRepository[Team]):
         await db.refresh(member)
         return member
 
-    async def remove_member(
-        self, db: AsyncSession, *, member: TeamMember
-    ) -> None:
+    async def remove_member(self, db: AsyncSession, *, member: TeamMember) -> None:
         """Remove a member from a team."""
         await db.delete(member)
         await db.commit()
 
-    async def get_team_user_ids(
-        self, db: AsyncSession, *, team_id: int
-    ) -> list[int]:
+    async def get_team_user_ids(self, db: AsyncSession, *, team_id: int) -> list[int]:
         """Get all user IDs in a team."""
         result = await db.execute(
             select(TeamMember.user_id).filter(TeamMember.team_id == team_id)

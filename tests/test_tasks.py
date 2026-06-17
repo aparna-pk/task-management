@@ -303,7 +303,9 @@ async def test_sort_tasks_by_priority(client: AsyncClient, auth_headers: dict):
 
 
 @pytest.mark.asyncio
-async def test_update_task_priority_and_due_date(client: AsyncClient, auth_headers: dict):
+async def test_update_task_priority_and_due_date(
+    client: AsyncClient, auth_headers: dict
+):
     """Test updating task priority and due date."""
     create_response = await client.post(
         "/api/v1/tasks",

@@ -4,9 +4,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 
 @pytest.mark.asyncio
-async def test_create_task_with_assignee(
-    client: AsyncClient, auth_headers: dict
-):
+async def test_create_task_with_assignee(client: AsyncClient, auth_headers: dict):
     """Test creating a task with an assignee."""
     # Register a second user
     user2_data = {
@@ -35,9 +33,7 @@ async def test_create_task_with_assignee(
 
 
 @pytest.mark.asyncio
-async def test_create_task_invalid_assignee(
-    client: AsyncClient, auth_headers: dict
-):
+async def test_create_task_invalid_assignee(client: AsyncClient, auth_headers: dict):
     """Test creating a task with a non-existent assignee returns 404."""
     resp = await client.post(
         "/api/v1/tasks",
@@ -112,12 +108,16 @@ async def test_task_authorization_flow(
     assert third_update_resp.status_code == 404
 
     # 5. Assignee (User 2) cannot delete the task (forbidden)
-    delete_resp = await client.delete(f"/api/v1/tasks/{task_id}", headers=other_auth_headers)
+    delete_resp = await client.delete(
+        f"/api/v1/tasks/{task_id}", headers=other_auth_headers
+    )
     assert delete_resp.status_code == 403
     assert delete_resp.json()["message"] == "Only the task owner can delete this task."
 
     # 6. Owner (User 1) can delete the task
-    owner_delete_resp = await client.delete(f"/api/v1/tasks/{task_id}", headers=auth_headers)
+    owner_delete_resp = await client.delete(
+        f"/api/v1/tasks/{task_id}", headers=auth_headers
+    )
     assert owner_delete_resp.status_code == 200
 
 
@@ -143,7 +143,9 @@ async def test_get_assigned_tasks(
     )
 
     # Fetch User 2's assigned tasks
-    assigned_resp = await client.get("/api/v1/tasks/assigned", headers=other_auth_headers)
+    assigned_resp = await client.get(
+        "/api/v1/tasks/assigned", headers=other_auth_headers
+    )
     assert assigned_resp.status_code == 200
     assigned_tasks = assigned_resp.json()
     assert len(assigned_tasks) == 1
@@ -210,7 +212,9 @@ async def test_teams_crud_and_membership(
     )
     user3_headers = {"Authorization": f"Bearer {login_resp.json()['access_token']}"}
 
-    view_non_member_resp = await client.get(f"/api/v1/teams/{team_id}", headers=user3_headers)
+    view_non_member_resp = await client.get(
+        f"/api/v1/teams/{team_id}", headers=user3_headers
+    )
     assert view_non_member_resp.status_code == 403
 
     # 6. Remove member

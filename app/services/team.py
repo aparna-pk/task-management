@@ -23,25 +23,17 @@ class TeamService:
         # Re-fetch with members loaded
         return await team_repository.get_with_members(db, team_id=team.id)
 
-    async def get_team(
-        self, db: AsyncSession, *, team_id: int, user_id: int
-    ) -> Team:
+    async def get_team(self, db: AsyncSession, *, team_id: int, user_id: int) -> Team:
         """Get a team by ID. User must be a member."""
         team = await team_repository.get_with_members(db, team_id=team_id)
         if not team:
             raise NotFoundException(message="Team not found.")
-        member = await team_repository.get_member(
-            db, team_id=team_id, user_id=user_id
-        )
+        member = await team_repository.get_member(db, team_id=team_id, user_id=user_id)
         if not member:
-            raise ForbiddenException(
-                message="You are not a member of this team."
-            )
+            raise ForbiddenException(message="You are not a member of this team.")
         return team
 
-    async def get_user_teams(
-        self, db: AsyncSession, *, user_id: int
-    ) -> list[Team]:
+    async def get_user_teams(self, db: AsyncSession, *, user_id: int) -> list[Team]:
         """Get all teams a user belongs to."""
         return await team_repository.get_teams_for_user(db, user_id=user_id)
 
@@ -63,13 +55,9 @@ class TeamService:
         team = await team_repository.get(db, id=team_id)
         if not team:
             raise NotFoundException(message="Team not found.")
-        member = await team_repository.get_member(
-            db, team_id=team_id, user_id=user_id
-        )
+        member = await team_repository.get_member(db, team_id=team_id, user_id=user_id)
         if not member or member.role != TeamRole.OWNER:
-            raise ForbiddenException(
-                message="Only the team owner can delete the team."
-            )
+            raise ForbiddenException(message="Only the team owner can delete the team.")
         await team_repository.remove(db, id=team_id)
         return team
 
@@ -97,9 +85,7 @@ class TeamService:
             db, team_id=team_id, user_id=member_data.user_id
         )
         if existing:
-            raise BadRequestException(
-                message="User is already a member of this team."
-            )
+            raise BadRequestException(message="User is already a member of this team.")
 
         return await team_repository.add_member(
             db,
@@ -118,9 +104,7 @@ class TeamService:
         user_id: int,
     ) -> TeamMember:
         """Update a member's role. Only OWNER can change roles."""
-        member = await team_repository.get_member(
-            db, team_id=team_id, user_id=user_id
-        )
+        member = await team_repository.get_member(db, team_id=team_id, user_id=user_id)
         if not member or member.role != TeamRole.OWNER:
             raise ForbiddenException(
                 message="Only the team owner can change member roles."
@@ -130,9 +114,7 @@ class TeamService:
             db, team_id=team_id, user_id=member_user_id
         )
         if not target_member:
-            raise NotFoundException(
-                message="Member not found in this team."
-            )
+            raise NotFoundException(message="Member not found in this team.")
 
         return await team_repository.update_member_role(
             db, member=target_member, role=role
@@ -151,9 +133,7 @@ class TeamService:
             db, team_id=team_id, user_id=member_user_id
         )
         if not target_member:
-            raise NotFoundException(
-                message="Member not found in this team."
-            )
+            raise NotFoundException(message="Member not found in this team.")
 
         # Allow self-removal (leaving) unless OWNER
         if member_user_id == user_id:
@@ -167,27 +147,21 @@ class TeamService:
         # Otherwise, require admin privileges
         await self._require_admin(db, team_id=team_id, user_id=user_id)
         if target_member.role == TeamRole.OWNER:
-            raise ForbiddenException(
-                message="Cannot remove the team owner."
-            )
+            raise ForbiddenException(message="Cannot remove the team owner.")
         await team_repository.remove_member(db, member=target_member)
 
     async def is_team_member(
         self, db: AsyncSession, *, team_id: int, user_id: int
     ) -> bool:
         """Check if a user is a member of a team."""
-        member = await team_repository.get_member(
-            db, team_id=team_id, user_id=user_id
-        )
+        member = await team_repository.get_member(db, team_id=team_id, user_id=user_id)
         return member is not None
 
     async def _require_admin(
         self, db: AsyncSession, *, team_id: int, user_id: int
     ) -> TeamMember:
         """Verify the user is an OWNER or ADMIN of the team."""
-        member = await team_repository.get_member(
-            db, team_id=team_id, user_id=user_id
-        )
+        member = await team_repository.get_member(db, team_id=team_id, user_id=user_id)
         if not member or member.role not in (TeamRole.OWNER, TeamRole.ADMIN):
             raise ForbiddenException(
                 message="You do not have admin privileges for this team."
