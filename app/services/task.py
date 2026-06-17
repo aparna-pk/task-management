@@ -24,7 +24,10 @@ class TaskService:
         skip: int = 0,
         limit: int = 100,
     ) -> list[Task]:
-        """Retrieve tasks for an owner with optional filtering, sorting, and pagination."""
+        """Retrieve tasks for an owner with optional filtering, sorting,
+
+        and pagination.
+        """
         return await task_repository.get_multi_by_owner(
             db,
             owner_id=owner_id,
@@ -49,7 +52,10 @@ class TaskService:
         skip: int = 0,
         limit: int = 100,
     ) -> list[Task]:
-        """Retrieve tasks assigned to a specific user with optional filtering, sorting, and pagination."""
+        """Retrieve tasks assigned to a specific user with optional filtering,
+
+        sorting, and pagination.
+        """
         return await task_repository.get_assigned_to_user(
             db,
             assignee_id=assignee_id,

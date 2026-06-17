@@ -1,6 +1,5 @@
 import pytest
 from httpx import AsyncClient
-from sqlalchemy.ext.asyncio import AsyncSession
 
 
 @pytest.mark.asyncio
@@ -60,7 +59,6 @@ async def test_task_authorization_flow(
     }
     reg_resp = await client.post("/api/v1/auth/register", json=user3_data)
     assert reg_resp.status_code == 201
-    user3_id = reg_resp.json()["id"]
 
     # Log in User 3 to get their auth headers
     login_resp = await client.post(

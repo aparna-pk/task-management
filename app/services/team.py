@@ -21,7 +21,10 @@ class TeamService:
             db, team_id=team.id, user_id=owner_id, role=TeamRole.OWNER
         )
         # Re-fetch with members loaded
-        return await team_repository.get_with_members(db, team_id=team.id)
+        fetched_team = await team_repository.get_with_members(db, team_id=team.id)
+        if not fetched_team:
+            raise NotFoundException(message="Team not found after creation.")
+        return fetched_team
 
     async def get_team(self, db: AsyncSession, *, team_id: int, user_id: int) -> Team:
         """Get a team by ID. User must be a member."""
@@ -46,7 +49,10 @@ class TeamService:
             raise NotFoundException(message="Team not found.")
         await self._require_admin(db, team_id=team_id, user_id=user_id)
         updated = await team_repository.update(db, db_obj=team, obj_in=obj_in)
-        return await team_repository.get_with_members(db, team_id=updated.id)
+        fetched_team = await team_repository.get_with_members(db, team_id=updated.id)
+        if not fetched_team:
+            raise NotFoundException(message="Team not found after update.")
+        return fetched_team
 
     async def delete_team(
         self, db: AsyncSession, *, team_id: int, user_id: int
@@ -139,7 +145,8 @@ class TeamService:
         if member_user_id == user_id:
             if target_member.role == TeamRole.OWNER:
                 raise BadRequestException(
-                    message="Team owner cannot leave. Transfer ownership or delete the team."
+                    message="Team owner cannot leave. "
+                    "Transfer ownership or delete the team."
                 )
             await team_repository.remove_member(db, member=target_member)
             return

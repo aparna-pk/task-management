@@ -2,7 +2,7 @@ from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import selectinload
 
-from app.models.team import Team, TeamMember
+from app.models.team import Team, TeamMember, TeamRole
 from app.repositories.base import BaseRepository
 
 
@@ -36,7 +36,7 @@ class TeamRepository(BaseRepository[Team]):
         return result.scalars().first()
 
     async def add_member(
-        self, db: AsyncSession, *, team_id: int, user_id: int, role: str
+        self, db: AsyncSession, *, team_id: int, user_id: int, role: TeamRole
     ) -> TeamMember:
         """Add a user as a member of a team."""
         member = TeamMember(team_id=team_id, user_id=user_id, role=role)
@@ -46,7 +46,7 @@ class TeamRepository(BaseRepository[Team]):
         return member
 
     async def update_member_role(
-        self, db: AsyncSession, *, member: TeamMember, role: str
+        self, db: AsyncSession, *, member: TeamMember, role: TeamRole
     ) -> TeamMember:
         """Update a team member's role."""
         member.role = role
