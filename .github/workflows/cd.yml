@@ -1,0 +1,93 @@
+name: Continuous Deployment
+
+on:
+  push:
+    branches:
+      - main
+      - master
+
+permissions:
+  contents: read
+
+jobs:
+  deploy:
+    name: Build, Push and Deploy
+    runs-on: ubuntu-latest
+    steps:
+      # Step 1: Checkout repository code
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      # Step 2: Configure AWS Credentials
+      # This step authenticates the GitHub Actions runner with AWS.
+      # You can use standard IAM access keys (stored as GitHub secrets)
+      # or upgrade to OIDC roles (recommended for production).
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: ${{ secrets.AWS_REGION }}
+
+      # Step 3: Login to Amazon ECR
+      - name: Log in to Amazon ECR
+        id: login-ecr
+        uses: aws-actions/amazon-ecr-login@v2
+
+      # Step 4: Set up Docker Buildx
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      # Step 5: Build, Tag, and Push Docker Image to ECR
+      # We tag the image with both the unique git commit SHA and 'latest'.
+      # The commit SHA ensures traceability (exactly which code is deployed).
+      - name: Build and Push Docker Image
+        uses: docker/build-push-action@v5
+        with:
+          context: .
+          file: ./Dockerfile
+          push: true
+          tags: |
+            ${{ steps.login-ecr.outputs.registry }}/${{ secrets.ECR_REPOSITORY }}:${{ github.sha }}
+            ${{ steps.login-ecr.outputs.registry }}/${{ secrets.ECR_REPOSITORY }}:latest
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+
+      # Step 6: Deploy to EC2 via SSH
+      # We SSH into the EC2 instance and run a script to update the container.
+      - name: Deploy to EC2
+        uses: appleboy/ssh-action@v1.0.3
+        with:
+          host: ${{ secrets.EC2_HOST }}
+          username: ${{ secrets.EC2_USER }}
+          key: ${{ secrets.EC2_SSH_KEY }}
+          script: |
+            # 1. Login to Amazon ECR from the EC2 instance
+            aws ecr get-login-password --region ${{ secrets.AWS_REGION }} | docker login --username AWS --password-stdin ${{ steps.login-ecr.outputs.registry }}
+
+            # 2. Pull the newly pushed image from ECR using the specific commit SHA
+            docker pull ${{ steps.login-ecr.outputs.registry }}/${{ secrets.ECR_REPOSITORY }}:${{ github.sha }}
+
+            # 3. Stop the existing container if it is running
+            docker stop task-management-api || true
+
+            # 4. Remove the existing container
+            docker rm task-management-api || true
+
+            # 5. Run the new container with production environment variables
+            # Note: Storing environment variables in GitHub Secrets and passing them via docker run is
+            # a simple starting point. We recommend Parameter Store or an IAM-attached secret file later.
+            docker run -d \
+              --name task-management-api \
+              -p 8000:8000 \
+              --restart always \
+              -e SECRET_KEY="${{ secrets.SECRET_KEY }}" \
+              -e POSTGRES_SERVER="${{ secrets.POSTGRES_SERVER }}" \
+              -e POSTGRES_PORT="${{ secrets.POSTGRES_PORT }}" \
+              -e POSTGRES_USER="${{ secrets.POSTGRES_USER }}" \
+              -e POSTGRES_PASSWORD="${{ secrets.POSTGRES_PASSWORD }}" \
+              -e POSTGRES_DB="${{ secrets.POSTGRES_DB }}" \
+              ${{ steps.login-ecr.outputs.registry }}/${{ secrets.ECR_REPOSITORY }}:${{ github.sha }}
+
+            # 6. Clean up dangling images to save disk space (AWS Free Tier EBS is limited to 30GB)
+            docker image prune -f
